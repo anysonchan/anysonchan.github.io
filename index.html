@@ -1,0 +1,358 @@
+<!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  
+  <title>神来之笔</title>
+  <meta name="author" content="Xiao">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="神来之笔"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/favicon.png">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">神来之笔</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/null">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+  <article id="post-Passenger部署" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2024-03-28T09:29:48.000Z"><a href="/2024/03/28/Passenger%E9%83%A8%E7%BD%B2/">2024-03-28</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2024/03/28/Passenger%E9%83%A8%E7%BD%B2/">Passenger部署</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <p>服务器使用 CentOS</p>
+<h3 id="一、添加新用户Deploy"><a href="#一、添加新用户Deploy" class="headerlink" title="一、添加新用户Deploy"></a>一、添加新用户Deploy</h3><ol>
+<li>创建一个新用户</li>
+</ol>
+<p><code>adduser deploy</code></p>
+<ol start="2">
+<li>为新用户创建密码</li>
+</ol>
+<p><code>passwd deploy</code></p>
+<ol start="3">
+<li>添加权限</li>
+</ol>
+<p>在root用户下，打开 <em>&#x2F;etc&#x2F;sudoers</em> 文件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># User privilege specification</span><br><span class="line">root    ALL=(ALL:ALL) ALL</span><br><span class="line">deploy  ALL=(ALL:ALL) ALL # 添加这一行，使deploy具有使用sudo的权限</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>切换到 deploy 用户</li>
+</ol>
+<p><code>su deploy</code></p>
+<h3 id="二、Ruby-与-Rails-安装"><a href="#二、Ruby-与-Rails-安装" class="headerlink" title="二、Ruby 与 Rails 安装"></a>二、Ruby 与 Rails 安装</h3><ol>
+<li>更新所有yum 安装包</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo yum update</span><br><span class="line">sudo yum -y install make gcc openssl-devel zlib-devel gcc gcc-c++ make autoconf readline-devel curl-devel expat-devel gettext-devel ncurses-devel sqlite3-devel mysql-devel httpd-devel wget which git ImageMagick ImageMagick-devel</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>安装Rvm，切回到deploy用户目录下<code>su deploy</code></li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">gpg2 —recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB</span><br><span class="line"></span><br><span class="line">\curl -sSL https://get.rvm.io | bash -s stable</span><br><span class="line"></span><br><span class="line">echo &#x27;[[ -s &quot;$HOME/.rvm/scripts/rvm&quot; ]] &amp;&amp; . &quot;$HOME/.rvm/scripts/rvm&quot;&#x27; &gt;&gt;~/.bashrc</span><br><span class="line"></span><br><span class="line">source ~/.bashrc</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>get.rvm.io 是重定向到 <a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/rvm/rvm/master/binscripts/rvm-installer">https://raw.githubusercontent.com/rvm/rvm/master/binscripts/rvm-installer</a> 这个地址的。可是有些国内机构的网络中，raw.githubusercontent.com这个域名是被屏蔽的。<br>解决办法：<br>可先在本地下载rvm-installer脚本，再拷贝脚本到服务器后，再执行安装命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 1. 本机上下载</span><br><span class="line">curl -L get.rvm.io &gt; rvm-installer.sh</span><br><span class="line"></span><br><span class="line"># 2. 拷贝rvm-installer.sh到服务器</span><br><span class="line"></span><br><span class="line"># 3. 服务器本地执行安装命令</span><br><span class="line">cat rvm-installer.sh | bash -s stable</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>官方安装说明：<a target="_blank" rel="noopener" href="https://rvm.io/rvm/install">RVM: Ruby Version Manager -      Installing RVM</a></p>
+<p>验证rvm是否安装成功</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rvm -v</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>安装RVM依赖</li>
+</ol>
+<p><code>rvm requirements</code></p>
+<p>更换镜像源</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ gem sources —add https://gems.ruby-china.com/ —remove https://rubygems.org/</span><br><span class="line">$ gem sources -l</span><br><span class="line">https://gems.ruby-china.com</span><br><span class="line"># 确保只有 gems.ruby-china.com</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>检查是否需要设置 rvmsudo_secure_path&#x3D;1</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ if sudo grep -q secure_path /etc/sudoers; then sudo sh -c &quot;echo export rvmsudo_secure_path=1 &gt;&gt; /etc/profile.d/rvm_secure_path.sh&quot; &amp;&amp; echo Environment variable installed; fi</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>安装ruby 2.6.5</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">rvm install 2.6.5</span><br><span class="line">rvm use 2.6.5 --default</span><br><span class="line">ruby -v</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>安装 Rails</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gem install rails --version 6.0.0</span><br><span class="line"></span><br><span class="line">rails -v</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="三、安装Mysql数据库与redis"><a href="#三、安装Mysql数据库与redis" class="headerlink" title="三、安装Mysql数据库与redis"></a>三、安装Mysql数据库与redis</h3><ol>
+<li>安装</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo yum -y install mariadb-server mariadb mysql-devel</span><br></pre></td></tr></table></figure>
+
+<p>注意默认安装的是 mariadb 5.5.3版本<br>目前最新版本是 mariadb 10+，需修改镜像源，参考地址：<a target="_blank" rel="noopener" href="https://downloads.mariadb.org/mariadb/repositories/#distro=CentOS&distro_release=centos7-amd64--centos7&mirror=hostag&version=10.3">MariaDB - Setting up MariaDB Repositories         - MariaDB</a></p>
+<p><code>sudo vi /etc/yum.repos.d/MariaDB.repo</code></p>
+<p>添加如下内容</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># MariaDB 10.4 CentOS repository list - created 2020-05-11 07:36 UTC</span><br><span class="line"># http://downloads.mariadb.org/mariadb/repositories/</span><br><span class="line">[mariadb]</span><br><span class="line">name = MariaDB</span><br><span class="line">baseurl = http://mirrors.neusoft.edu.cn/mariadb/yum/10.4/centos74-amd64/</span><br><span class="line">gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB</span><br><span class="line">gpgcheck=0</span><br></pre></td></tr></table></figure>
+
+
+<ol start="2">
+<li>启动服务</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 启动</span><br><span class="line">systemctl start mariadb.service</span><br><span class="line"></span><br><span class="line"># 开机自启动</span><br><span class="line">sudo systemctl enable mariadb.service</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>连接Mysql</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">sudo mysql -u root</span><br><span class="line"></span><br><span class="line"># 修改root密码</span><br><span class="line">set password for root@localhost=password(&#x27;在这里填入root密码&#x27;);</span><br><span class="line"></span><br><span class="line"># 查看用户信息</span><br><span class="line">select user,host,password from mysql.user;</span><br><span class="line"></span><br><span class="line"># 删除空的用户</span><br><span class="line">delete from mysql.user where user=&#x27;&#x27;;</span><br><span class="line"></span><br><span class="line"># 删除root密码为空的用户</span><br><span class="line">delete from mysql.user where password=&#x27;&#x27;;</span><br><span class="line"># 使操作生效</span><br><span class="line">flush privileges;</span><br><span class="line"></span><br><span class="line"># 创建用户</span><br><span class="line">GRANT ALL PRIVILEGES ON *.* TO &#x27;你的用户名&#x27;@localhost IDENTIFIED BY &#x27;在这里填入密码&#x27; WITH GRANT OPTION;</span><br><span class="line">GRANT ALL PRIVILEGES ON *.* TO &#x27;你的用户名&#x27;@&quot;%&quot; IDENTIFIED BY &#x27;在这里填入密码&#x27; WITH GRANT OPTION;</span><br></pre></td></tr></table></figure>
+
+<p>用新创建的用户连接你的数据，并创建数据库</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; create DATABASE production_blog;</span><br><span class="line"> 或</span><br><span class="line">mysql&gt; create database production_blog default character set utf8mb4 collate utf8mb4_unicode_ci;</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>安装redis5.0+</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># Add REMI repisitory</span><br><span class="line">sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-7.rpm</span><br><span class="line"></span><br><span class="line"># Install Redis</span><br><span class="line">sudo yum --enablerepo=remi install redis</span><br><span class="line"></span><br><span class="line"># 开机启动</span><br><span class="line">sudo systemctl enable --now redis</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="四、安装Nginx-passenger-官网安装方法"><a href="#四、安装Nginx-passenger-官网安装方法" class="headerlink" title="四、安装Nginx passenger  官网安装方法"></a>四、安装Nginx passenger  <a target="_blank" rel="noopener" href="https://www.phusionpassenger.com/library/walkthroughs/deploy/ruby/ownserver/nginx/oss/install_language_runtime.html">官网安装方法</a></h3><ol>
+<li>安装 Bundler</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem install bundler</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>安装 Node.js</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo yum install -y epel-release</span><br><span class="line">sudo yum install -y --enablerepo=epel nodejs npm</span><br></pre></td></tr></table></figure>
+
+
+<ol start="3">
+<li>开启 ** EPEL**</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo yum install -y epel-release yum-utils</span><br><span class="line">sudo yum-config-manager --enable epel</span><br><span class="line">sudo yum clean all &amp;&amp; sudo yum update -y</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>Repair potential system issues</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">sudo yum update -y</span><br><span class="line"></span><br><span class="line">date</span><br><span class="line"># if the output of date is wrong, please follow these instructions to install ntp</span><br><span class="line">sudo yum install -y ntp</span><br><span class="line">sudo chkconfig ntpd on</span><br><span class="line">sudo ntpdate pool.ntp.org</span><br><span class="line">sudo service ntpd start</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>Install Passenger packages</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># Install various prerequisites</span><br><span class="line">sudo yum install -y pygpgme curl</span><br><span class="line"></span><br><span class="line"># Add our el7 YUM repository</span><br><span class="line">sudo curl --fail -sSLo /etc/yum.repos.d/passenger.repo https://oss-binaries.phusionpassenger.com/yum/definitions/el-passenger.repo</span><br><span class="line"></span><br><span class="line"># Install Passenger Nginx</span><br><span class="line">sudo yum install -y nginx passenger || sudo yum-config-manager --enable cr &amp;&amp; sudo yum install -y nginx passenger</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>有时通过RPM安装Passenger 不会自动更新nginx及安装相应nginx与passenger的mod库，可通过手动安装来解决：<br><code>sudo yum install nginx-mod-http-passenger </code></p>
+<ol start="6">
+<li>Enable the Passenger Nginx module and restart Nginx</li>
+</ol>
+<p>Edit &#x2F;etc&#x2F;nginx&#x2F;conf.d&#x2F;passenger.conf and uncomment passenger_root, passenger_ruby and passenger_instance_registry_dir. For example, you may see this:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># passenger_root /some-filename/locations.ini;</span><br><span class="line"># passenger_ruby /usr/bin/ruby;</span><br><span class="line"># passenger_instance_registry_dir /var/run/passenger-instreg;</span><br></pre></td></tr></table></figure>
+
+<p>Remove the ‘#’ characters, like this:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">passenger_root /some-filename/locations.ini;</span><br><span class="line">passenger_ruby /home/deploy/.rvm/gems/ruby-2.6.5/wrappers/ruby;//这里需要修改ruby的安装路径</span><br><span class="line">passenger_instance_registry_dir /var/run/passenger-instreg;</span><br></pre></td></tr></table></figure>
+
+<p>启动服务</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service nginx restart</span><br></pre></td></tr></table></figure>
+
+<ol start="7">
+<li>验证安装</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo /usr/bin/passenger-config validate-install</span><br></pre></td></tr></table></figure>
+
+<p>出现如下图一样表示OK了<br>![](&#x2F;Users&#x2F;xiao&#x2F;Desktop&#x2F;Passenger + Nginx + Capistrano 部署&#x2F;D7998DD5-38FC-404C-96CE-35055DF0E333.png)</p>
+<ol start="8">
+<li>查看Nginx 与 Passenger 运行情况</li>
+</ol>
+<p><code>sudo /usr/sbin/passenger-memory-stats</code></p>
+<h3 id="五、Capistrano-配置"><a href="#五、Capistrano-配置" class="headerlink" title="五、Capistrano 配置"></a>五、<strong>Capistrano</strong> 配置</h3><p>参考：<a target="_blank" rel="noopener" href="https://www.phusionpassenger.com/library/deploy/apache/automating_app_updates/ruby/">Automating deployments of Ruby application updates through Capistrano - Apache - Passenger Library</a></p>
+<ol>
+<li>安装必要的包 - Gemfile</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">group :development do</span><br><span class="line">	gem &#x27;capistrano&#x27;</span><br><span class="line">	gem &#x27;capistrano-bundler&#x27;</span><br><span class="line">	gem &#x27;capistrano-rails&#x27;</span><br><span class="line">	# Add this if you&#x27;re using rbenv</span><br><span class="line">	# gem &#x27;capistrano-rbenv&#x27;</span><br><span class="line">	gem &#x27;capistrano-rvm&#x27;</span><br><span class="line">	gem &#x27;capistrano-passenger&#x27;</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+
+<p>执行cap install 生成必要文件<br><code>cap install</code></p>
+<ol start="2">
+<li>修改 Capfile文件</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"># Load DSL and set up stages</span><br><span class="line">require &quot;capistrano/setup&quot;</span><br><span class="line"></span><br><span class="line"># Include default deployment tasks</span><br><span class="line">require &quot;capistrano/deploy&quot;</span><br><span class="line"></span><br><span class="line"># Load the SCM plugin appropriate to your project:</span><br><span class="line">#</span><br><span class="line"># require &quot;capistrano/scm/hg&quot;</span><br><span class="line"># install_plugin Capistrano::SCM::Hg</span><br><span class="line"># or</span><br><span class="line"># require &quot;capistrano/scm/svn&quot;</span><br><span class="line"># install_plugin Capistrano::SCM::Svn</span><br><span class="line"># or</span><br><span class="line">require &quot;capistrano/scm/git&quot;</span><br><span class="line">install_plugin Capistrano::SCM::Git</span><br><span class="line"></span><br><span class="line"># Include tasks from other gems included in your Gemfile</span><br><span class="line">#</span><br><span class="line"># For documentation on these, see for example:</span><br><span class="line">#</span><br><span class="line">#   https://github.com/capistrano/rvm</span><br><span class="line">#   https://github.com/capistrano/rbenv</span><br><span class="line">#   https://github.com/capistrano/chruby</span><br><span class="line">#   https://github.com/capistrano/bundler</span><br><span class="line">#   https://github.com/capistrano/rails</span><br><span class="line">#   https://github.com/capistrano/passenger</span><br><span class="line">#</span><br><span class="line"># require &quot;capistrano/rvm&quot;</span><br><span class="line">require &quot;capistrano/rbenv&quot;</span><br><span class="line"># require &quot;capistrano/chruby&quot;</span><br><span class="line">require &quot;capistrano/bundler&quot;</span><br><span class="line">require &quot;capistrano/rails/assets&quot;</span><br><span class="line">require &quot;capistrano/rails/migrations&quot;</span><br><span class="line">require &quot;capistrano/passenger&quot;</span><br><span class="line">set :rbenv_type, :user</span><br><span class="line">set :rbenv_ruby, &#x27;2.5.0&#x27;</span><br><span class="line"></span><br><span class="line"># Load custom tasks from `lib/capistrano/tasks` if you have any defined</span><br><span class="line">Dir.glob(&quot;lib/capistrano/tasks/*.rake&quot;).each &#123; |r| import r &#125; </span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>修改 config&#x2F;deploy.eb 文件</li>
+</ol>
+<p>注意：需先添加服务器ssh key 到 git代码托管服务的平台</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"># config valid for current version and patch releases of Capistrano</span><br><span class="line">lock &quot;~&gt; 3.11.2&quot;</span><br><span class="line"></span><br><span class="line">set :application, &quot;script_blog&quot;</span><br><span class="line">set :repo_url, &quot;git@bitbucket.org:Anyson/script_blog.git&quot;</span><br><span class="line"></span><br><span class="line"># Default branch is :master</span><br><span class="line"># ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp</span><br><span class="line"></span><br><span class="line"># Default deploy_to directory is /var/www/my_app_name</span><br><span class="line">set :deploy_to, &quot;/home/deploy/scrit_blog&quot;</span><br><span class="line"></span><br><span class="line"># Default value for :format is :airbrussh.</span><br><span class="line"># set :format, :airbrussh</span><br><span class="line"></span><br><span class="line"># You can configure the Airbrussh format using :format_options.</span><br><span class="line"># These are the defaults.</span><br><span class="line"># set :format_options, command_output: true, log_file: &quot;log/capistrano.log&quot;, color: :auto, truncate: :auto</span><br><span class="line"></span><br><span class="line"># Default value for :pty is false</span><br><span class="line"># set :pty, true</span><br><span class="line"></span><br><span class="line"># Default value for :linked_files is []</span><br><span class="line"># append :linked_files, &quot;config/database.yml&quot;</span><br><span class="line"># 在服务器&lt;project-name&gt;/share/config/ 下，要手动新建这两个文件，</span><br><span class="line">append :linked_files, &quot;config/database.yml&quot;,&quot;config/secrets.yml&quot;</span><br><span class="line"></span><br><span class="line"># Default value for linked_dirs is []</span><br><span class="line">append :linked_dirs, &quot;log&quot;, &quot;tmp/pids&quot;, &quot;tmp/cache&quot;, &quot;tmp/sockets&quot;, &quot;public/system&quot;</span><br><span class="line"></span><br><span class="line"># Default value for default_env is &#123;&#125;</span><br><span class="line"># set :default_env, &#123; path: &quot;/opt/ruby/bin:$PATH&quot; &#125;</span><br><span class="line"></span><br><span class="line"># Default value for local_user is ENV[&#x27;USER&#x27;]</span><br><span class="line"># set :local_user, -&gt; &#123; `git config user.name`.chomp &#125;</span><br><span class="line"></span><br><span class="line"># Default value for keep_releases is 5</span><br><span class="line"># set :keep_releases, 5</span><br><span class="line"></span><br><span class="line"># Uncomment the following to require manually verifying the host key before first deploy.</span><br><span class="line"># set :ssh_options, verify_host_key: :secure</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>注意 append :linked_files, “config&#x2F;database.yml”,”config&#x2F;secrets.yml” database.yml 和 recrets.yml 是手动在sharde&#x2F;config&#x2F; 目录下新建的，一个是连接数据库的相关信息，一个是安全验证相关信息。我的部署目录是scriot_blog&#x2F; 就新建script_blog&#x2F;shared&#x2F;config 目录</p>
+<p>同时新建以上两个文件。</p>
+<p>database.yml</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">production:</span><br><span class="line">  adapter: mysql2</span><br><span class="line">  encoding: utf8mb4</span><br><span class="line">  pool: &lt;%= ENV.fetch(&quot;RAILS_MAX_THREADS&quot;) &#123; 5 &#125; %&gt;</span><br><span class="line">  socket: /var/lib/mysql/mysql.sock</span><br><span class="line">  database: production_blog</span><br><span class="line">  username: xxxx</span><br><span class="line">  password: xxx</span><br></pre></td></tr></table></figure>
+
+<p>secrets.yml</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">production:</span><br><span class="line">	secret_key_base: xxxxxx</span><br></pre></td></tr></table></figure>
+
+<p>其中secret_key_base 的值是在本地项目下 执行 <code>rake secret</code> 命令生成的。</p>
+<ol start="4">
+<li>修改 confi&#x2F;deploy&#x2F;production.rb 文件</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"># server-based syntax</span><br><span class="line"># ======================</span><br><span class="line"># Defines a single server with a list of roles and multiple properties.</span><br><span class="line"># You can define all roles on a single server, or split them:</span><br><span class="line"></span><br><span class="line"># server &quot;39.108.138.149&quot;, user: &quot;root&quot;, roles: %w&#123;app db web&#125;, my_property: :my_value</span><br><span class="line">server &quot;xxxx服务器的ip&quot;, user: &quot;deploy&quot;, roles: %w&#123;app db web&#125;</span><br><span class="line"># server &quot;example.com&quot;, user: &quot;deploy&quot;, roles: %w&#123;app web&#125;, other_property: :other_value</span><br><span class="line"># server &quot;db.example.com&quot;, user: &quot;deploy&quot;, roles: %w&#123;db&#125;</span><br><span class="line"># role-based syntax</span><br><span class="line"># ==================</span><br><span class="line"></span><br><span class="line"># Defines a role with one or multiple servers. The primary server in each</span><br><span class="line"># group is considered to be the first unless any hosts have the primary</span><br><span class="line"># property set. Specify the username and a domain or IP for the server.</span><br><span class="line"># Don&#x27;t use `:all`, it&#x27;s a meta role.</span><br><span class="line"></span><br><span class="line"># role :app, %w&#123;deploy@example.com&#125;, my_property: :my_value</span><br><span class="line"># role :web, %w&#123;user1@primary.com user2@additional.com&#125;, other_property: :other_value</span><br><span class="line"># role :db,  %w&#123;deploy@example.com&#125;</span><br><span class="line"></span><br><span class="line"># Configuration</span><br><span class="line"># =============</span><br><span class="line"># You can set any configuration variable like in config/deploy.rb</span><br><span class="line"># These variables are then only loaded and set in this stage.</span><br><span class="line"># For available Capistrano configuration variables see the documentation page.</span><br><span class="line"># http://capistranorb.com/documentation/getting-started/configuration/</span><br><span class="line"># Feel free to add new variables to customise your setup.</span><br><span class="line"></span><br><span class="line"># Custom SSH Options</span><br><span class="line"># ==================</span><br><span class="line"># You may pass any option but keep in mind that net/ssh understands a</span><br><span class="line"># limited set of options, consult the Net::SSH documentation.</span><br><span class="line"># http://net-ssh.github.io/net-ssh/classes/Net/SSH.html#method-c-start</span><br><span class="line">#</span><br><span class="line"># Global options</span><br><span class="line"># --------------</span><br><span class="line">set :ssh_options, &#123;</span><br><span class="line">keys: %w(/home/deploy/.ssh/id_rsa),</span><br><span class="line">port: xxx</span><br><span class="line"># forward_agent: false,</span><br><span class="line"># auth_methods: %w(password)</span><br><span class="line">&#125;</span><br><span class="line">#</span><br><span class="line"># The server-based syntax can be used to override options:</span><br><span class="line"># ------------------------------------</span><br><span class="line"># server &quot;example.com&quot;,</span><br><span class="line">#   user: &quot;user_name&quot;,</span><br><span class="line">#     keys: %w(/home/user_name/.ssh/id_rsa),</span><br><span class="line">#     forward_agent: false,</span><br><span class="line">#     auth_methods: %w(publickey password)</span><br><span class="line">#     # password: &quot;please use keys&quot;</span><br><span class="line">#   &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>执行部署</li>
+</ol>
+<p><code>cap production deploy</code></p>
+<h3 id="六、Nginx配置"><a href="#六、Nginx配置" class="headerlink" title="六、Nginx配置"></a>六、Nginx配置</h3><ol>
+<li>maomaoyingshi.cnf 配置</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 443;</span><br><span class="line">    server_name maomaoyingshi.net;</span><br><span class="line">    ssl on;</span><br><span class="line">  	ssl_certificate /home/anyson/maomaoyingshi/.certs/maomaoyingshi.net.pem;</span><br><span class="line">  	ssl_certificate_key /home/anyson/maomaoyingshi/.certs/maomaoyingshi.net.key;</span><br><span class="line">  	ssl_session_timeout 5m;</span><br><span class="line">  	ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span><br><span class="line">  	ssl_ciphers ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;</span><br><span class="line">  	ssl_prefer_server_ciphers on;</span><br><span class="line"></span><br><span class="line">    rails_env    production;</span><br><span class="line"></span><br><span class="line">    # Tell Nginx and Passenger where your app&#x27;s &#x27;public&#x27; directory is</span><br><span class="line">    root /home/anyson/maomaoyingshi/current/public;</span><br><span class="line"></span><br><span class="line">    # Turn on Passenger</span><br><span class="line">    passenger_enabled on;</span><br><span class="line">    passenger_ruby /home/anyson/.rvm/gems/ruby-2.6.5/wrappers/ruby;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">server &#123;</span><br><span class="line">  listen 80;</span><br><span class="line">  server_name maomaoyingshi.net www.maomaoyingshi.net;</span><br><span class="line">  return 301 https://maomaoyingshi.net$request_uri;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">server &#123;</span><br><span class="line">    listen 443;</span><br><span class="line">    server_name www.maomaoyingshi.net;</span><br><span class="line">    ssl on;</span><br><span class="line">  	ssl_certificate /home/anyson/maomaoyingshi/.certs/maomaoyingshi.net.pem;</span><br><span class="line">  	ssl_certificate_key /home/anyson/maomaoyingshi/.certs/maomaoyingshi.net.key;</span><br><span class="line">  	ssl_session_timeout 5m;</span><br><span class="line">  	ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span><br><span class="line">  	ssl_ciphers ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;</span><br><span class="line">  	ssl_prefer_server_ciphers on;</span><br><span class="line">  	return 301 https://maomaoyingshi.net$request_uri;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-如何使用Hexo" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2024-03-28T07:56:01.147Z"><a href="/2024/03/28/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8Hexo/">2024-03-28</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2024/03/28/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8Hexo/">如何使用Hexo</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+<nav id="pagination">
+  
+  
+  <div class="clearfix"></div>
+</nav></div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="shenlaizhibi.com">
+  </form>
+</div>
+
+
+  
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  <a target="_blank" rel="noopener" href="http://www.miitbeian.gov.cn/">粤ICP备19152749号-1</a> 
+</div>
+<div class="clearfix"></div>
+<div class="alignleft">
+  
+  &copy; 2024 Xiao
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
